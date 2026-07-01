@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contas a Pagar - Gestão Financeira</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            padding: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #075e54;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Tela de Login */
+        .login-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-screen.active {
+            display: flex;
+        }
+
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .login-box h2 {
+            text-align: center;
+            color: #075e54;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .login-box .btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* Barra de status */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .modo-visualizacao {
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .modo-edicao {
+            color: #25d366;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-login {
+            background: #075e54;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .saldo-card {
+            background: linear-gradient(135deg, #075e54, #128c7e);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .saldo-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .saldo-valor {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .saldo-detalhes {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #128c7e;
+        }
+
+        input:disabled, select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #128c7e;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #c82333;
+        }
+
+        .contas-list {
+            margin-top: 20px;
+        }
+
+        .conta-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #25d366;
+            transition: all 0.3s;
+        }
+
+        .conta-item.pendente {
+            border-left-color: #ffc107;
+        }
+
+        .conta-item.atrasada {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .conta-item.parcial {
+            border-left-color: #ff9800;
+            background: #fff8e1;
+        }
+
+        .conta-info {
+            flex: 1;
+        }
+
+        .conta-descricao {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .conta-data {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .conta-valor {
+            font-weight: bold;
+            color: #075e54;
+            font-size: 18px;
+        }
+
+        .conta-acoes {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-pequeno {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-pequeno:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-pagar {
+            background: #25d366;
+            color: white;
+        }
+
+        .btn-pagar:hover:not(:disabled) {
+            background: #128c7e;
+        }
+
+        .btn-parcial {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-parcial:hover:not(:disabled) {
+            background: #f57c00;
+        }
+
+        .btn-excluir {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-excluir:hover:not(:disabled) {
+            background: #c82333;
+        }
+
+        .resumo-mensal {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .progress {
+            background: #25d366;
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+
+        .filtro-mes {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* SEÇÃO: Contas em Aberto */
+        .contas-abertas {
+            background: #fff3f3;
+            border: 2px solid #dc3545;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+        }
+
+        .contas-abertas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ffcccc;
+        }
+
+        .contas-abertas-titulo {
+            color: #dc3545;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .contas-abertas-total {
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .contas-abertas-lista {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .contas-abertas-lista::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .contas-abertas-lista::-webkit-scrollbar-thumb {
+            background: #dc3545;
+            border-radius: 10px;
+        }
+
+        .conta-aberta-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #dc3545;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .conta-aberta-item.parcial {
+            border-left-color: #ff9800;
+            background: #fff8e1;
+        }
+
+        .conta-aberta-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .conta-aberta-info {
+            flex: 1;
+        }
+
+        .conta-aberta-mes {
+            font-size: 11px;
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+
+        .badge-atraso {
+            background: #ffc107;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+
+        .badge-parcial {
+            background: #ff9800;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+
+        .sem-contas {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .detalhes-pagamento {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .aviso-visualizacao {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+            border: 1px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div class="login-screen active" id="loginScreen">
+        <div class="login-box">
+            <h2>🔐 Acesso Restrito</h2>
+            <p style="text-align: center; margin-bottom: 20px; color: #666;">
+                Apenas o administrador pode fazer alterações
+            </p>
+            <input type="password" id="senhaInput" placeholder="Digite a senha de administrador" autocomplete="off">
+            <button class="btn" onclick="verificarSenha()">Entrar como Administrador</button>
+            <button class="btn" style="background: #6c757d;" onclick="entrarComoVisualizador()">Apenas Visualizar</button>
+            <div class="error-message" id="errorMessage">Senha incorreta!</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Barra de Status -->
+        <div class="status-bar">
+            <div id="statusModo">
+                <span class="modo-visualizacao">👁️ Modo Visualização</span>
+            </div>
+            <div>
+                <button class="btn-login" id="btnLogin" onclick="mostrarLogin()">🔐 Fazer Login</button>
+                <button class="btn-logout" id="btnLogout" onclick="fazerLogout()" style="display: none;">🚪 Sair</button>
+            </div>
+        </div>
+
+        <h1>💰 Contas a Pagar</h1>
+
+        <!-- Aviso de Visualização -->
+        <div class="aviso-visualizacao" id="avisoVisualizacao">
+            ⚠️ Você está no modo visualização. As alterações estão bloqueadas.
+        </div>
+
+        <!-- Saldo do Mês -->
+        <div class="saldo-card">
+            <div class="saldo-label">Saldo do Mês Atual</div>
+            <div class="saldo-valor" id="saldoMensal">R$ 0,00</div>
+            <div class="saldo-detalhes">
+                <span>Total Pago: <span id="totalPago">R$ 0,00</span></span>
+                <span>Total Pendente: <span id="totalPendente">R$ 0,00</span></span>
+            </div>
+        </div>
+
+        <!-- Filtro de Mês -->
+        <div class="filtro-mes">
+            <select id="mesFiltro" style="flex: 1;">
+                <option value="0">Janeiro</option>
+                <option value="1">Fevereiro</option>
+                <option value="2">Março</option>
+                <option value="3">Abril</option>
+                <option value="4">Maio</option>
+                <option value="5">Junho</option>
+                <option value="6">Julho</option>
+                <option value="7">Agosto</option>
+                <option value="8">Setembro</option>
+                <option value="9">Outubro</option>
+                <option value="10">Novembro</option>
+                <option value="11">Dezembro</option>
+            </select>
+            <select id="anoFiltro" style="flex: 1;">
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
+        </div>
+
+        <!-- Formulário para adicionar conta -->
+        <form id="contaForm">
+            <div class="form-group">
+                <label>Descrição da Cobrança</label>
+                <input type="text" id="descricao" placeholder="Ex: Conta de luz, Aluguel..." required disabled>
+            </div>
+            <div class="form-group">
+                <label>Data de Vencimento</label>
+                <input type="date" id="dataVencimento" required disabled>
+            </div>
+            <div class="form-group">
+                <label>Valor Total (R$)</label>
+                <input type="number" id="valor" step="0.01" min="0.01" placeholder="0,00" required disabled>
+            </div>
+            <button type="submit" class="btn" id="btnAdicionar" disabled>➕ Adicionar Conta</button>
+        </form>
+
+        <!-- Lista de Contas do Mês -->
+        <div class="contas-list" id="contasList">
+            <!-- Contas serão inseridas aqui via JavaScript -->
+        </div>
+
+        <!-- Resumo Mensal -->
+        <div class="resumo-mensal">
+            <h3>📊 Progresso do Mês</h3>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Pago: <span id="percentualPago">0%</span></span>
+                <span>Contas Pagas: <span id="contasPagas">0/0</span></span>
+            </div>
+        </div>
+
+        <!-- SEÇÃO: Contas em Aberto (Meses Anteriores) -->
+        <div class="contas-abertas" id="contasAbertasSection">
+            <div class="contas-abertas-header">
+                <div class="contas-abertas-titulo">
+                    ⚠️ Contas em Aberto
+                </div>
+                <div class="contas-abertas-total" id="totalAbertoGeral">
+                    R$ 0,00
+                </div>
+            </div>
+            <div class="contas-abertas-lista" id="contasAbertasLista">
+                <!-- Contas em aberto serão inseridas aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração de senha (altere para sua senha pessoal)
+        const SENHA_ADMIN = "admin123"; // ALTERE ESTA SENHA!
+        
+        // Estado de autenticação
+        let isAdmin = false;
+        
+        // Dados iniciais de exemplo
+        let contas = JSON.parse(localStorage.getItem('contas')) || [
+            {
+                id: 1,
+                descricao: 'Aluguel',
+                dataVencimento: '2024-04-05',
+                valor: 1500.00,
+                pago: false,
+                valorPago: 500.00,
+                pagamentoParcial: true
+            },
+            {
+                id: 2,
+                descricao: 'Conta de Luz - Março',
+                dataVencimento: '2024-03-15',
+                valor: 200.00,
+                pago: false,
+                valorPago: 0,
+                pagamentoParcial: false
+            },
+            {
+                id: 3,
+                descricao: 'Internet - Fevereiro',
+                dataVencimento: '2024-02-10',
+                valor: 100.00,
+                pago: false,
+                valorPago: 0,
+                pagamentoParcial: false
+            },
+            {
+                id: 4,
+                descricao: 'Cartão de Crédito',
+                dataVencimento: '2024-07-20',
+                valor: 800.00,
+                pago: false,
+                valorPago: 0,
+                pagamentoParcial: false
+            }
+        ];
+
+        // Configurar mês e ano atual no filtro
+        const hoje = new Date();
+        document.getElementById('mesFiltro').value = hoje.getMonth();
+        document.getElementById('anoFiltro').value = hoje.getFullYear();
+
+        // Função para verificar senha
+        function verificarSenha() {
+            const senha = document.getElementById('senhaInput').value;
+            if (senha === SENHA_ADMIN) {
+                isAdmin = true;
+                document.getElementById('loginScreen').classList.remove('active');
+                document.getElementById('errorMessage').style.display = 'none';
+                atualizarModoEdicao();
+                document.getElementById('senhaInput').value = '';
+            } else {
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('senhaInput').value = '';
+            }
+        }
+
+        // Função para entrar como visualizador
+        function entrarComoVisualizador() {
+            isAdmin = false;
+            document.getElementById('loginScreen').classList.remove('active');
+            document.getElementById('errorMessage').style.display = 'none';
+            atualizarModoEdicao();
+        }
+
+        // Função para mostrar tela de login
+        function mostrarLogin() {
+            document.getElementById('loginScreen').classList.add('active');
+            document.getElementById('senhaInput').value = '';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Função para fazer logout
+        function fazerLogout() {
+            if (confirm('Tem certeza que deseja sair do modo administrador?')) {
+                isAdmin = false;
+                atualizarModoEdicao();
+                alert('Você saiu do modo administrador. Agora está apenas visualizando.');
+            }
+        }
+
+        // Função para atualizar interface baseado no modo
+        function atualizarModoEdicao() {
+            const statusModo = document.getElementById('statusModo');
+            const btnLogin = document.getElementById('btnLogin');
+            const btnLogout = document.getElementById('btnLogout');
+            const avisoVisualizacao = document.getElementById('avisoVisualizacao');
+            
+            // Campos do formulário
+            const descricao = document.getElementById('descricao');
+            const dataVencimento = document.getElementById('dataVencimento');
+            const valor = document.getElementById('valor');
+            const btnAdicionar = document.getElementById('btnAdicionar');
+            
+            if (isAdmin) {
+                statusModo.innerHTML = '<span class="modo-edicao">✏️ Modo Administrador</span>';
+                btnLogin.style.display = 'none';
+                btnLogout.style.display = 'inline-block';
+                avisoVisualizacao.style.display = 'none';
+                
+                // Habilitar campos
+                descricao.disabled = false;
+                dataVencimento.disabled = false;
+                valor.disabled = false;
+                btnAdicionar.disabled = false;
+            } else {
+                statusModo.innerHTML = '<span class="modo-visualizacao">👁️ Modo Visualização</span>';
+                btnLogin.style.display = 'inline-block';
+                btnLogout.style.display = 'none';
+                avisoVisualizacao.style.display = 'block';
+                
+                // Desabilitar campos
+                descricao.disabled = true;
+                dataVencimento.disabled = true;
+                valor.disabled = true;
+                btnAdicionar.disabled = true;
+            }
+            
+            // Recarregar interface para atualizar botões
+            atualizarInterface();
+        }
+
+        // Função para salvar no localStorage
+        function salvarContas() {
+            if (!isAdmin) {
+                alert('❌ Acesso negado! Apenas o administrador pode fazer alterações.');
+                return false;
+            }
+            localStorage.setItem('contas', JSON.stringify(contas));
+            return true;
+        }
+
+        // Função para formatar moeda
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valor);
+        }
+
+        // Função para formatar data
+        function formatarData(data) {
+            return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+        }
+
+        // Função para obter nome do mês
+        function getNomeMes(mes) {
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            return meses[mes];
+        }
+
+        // Função para verificar se a conta está completamente paga
+        function contaCompletamentePaga(conta) {
+            return conta.pago && conta.valorPago >= conta.valor;
+        }
+
+        // Função para verificar se a conta está parcialmente paga
+        function contaParcialmentePaga(conta) {
+            return !conta.pago && conta.valorPago > 0 && conta.valorPago < conta.valor;
+        }
+
+        // Função para calcular dias de atraso
+        function diasAtraso(dataVencimento) {
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            const vencimento = new Date(dataVencimento + 'T00:00:00');
+            const diffTime = Math.abs(hoje - vencimento);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+
+        // Função para atualizar a interface
+        function atualizarInterface() {
+            const mesSelecionado = parseInt(document.getElementById('mesFiltro').value);
+            const anoSelecionado = parseInt(document.getElementById('anoFiltro').value);
+            
+            // Data do primeiro dia do mês selecionado
+            const primeiroDiaMesSelecionado = new Date(anoSelecionado, mesSelecionado, 1);
+            
+            // Filtrar contas do mês selecionado
+            const contasMes = contas.filter(conta => {
+                const data = new Date(conta.dataVencimento + 'T00:00:00');
+                return data.getMonth() === mesSelecionado && data.getFullYear() === anoSelecionado;
+            });
+
+            // Filtrar TODAS as contas em aberto de meses anteriores
+            const contasAbertasAnteriores = contas.filter(conta => {
+                if (contaCompletamentePaga(conta)) return false;
+                
+                const dataVencimento = new Date(conta.dataVencimento + 'T00:00:00');
+                
+                if (dataVencimento < primeiroDiaMesSelecionado) {
+                    return true;
+                }
+                
+                return false;
+            });
+
+            // Calcular totais do mês
+            const totalMes = contasMes.reduce((acc, conta) => acc + conta.valor, 0);
+            const totalPagoMes = contasMes
+                .filter(conta => contaCompletamentePaga(conta))
+                .reduce((acc, conta) => acc + conta.valorPago, 0);
+            const totalPendenteMes = totalMes - totalPagoMes;
+            const contasPagasCount = contasMes.filter(conta => contaCompletamentePaga(conta)).length;
+            const percentualPago = totalMes > 0 ? (totalPagoMes / totalMes) * 100 : 0;
+
+            // Calcular total de contas em aberto
+            const totalAbertoGeral = contasAbertasAnteriores.reduce((acc, conta) => {
+                return acc + (conta.valor - conta.valorPago);
+            }, 0);
+
+            // Atualizar cards de saldo
+            document.getElementById('saldoMensal').textContent = formatarMoeda(totalPendenteMes);
+            document.getElementById('totalPago').textContent = formatarMoeda(totalPagoMes);
+            document.getElementById('totalPendente').textContent = formatarMoeda(totalPendenteMes);
+
+            // Atualizar progresso
+            document.getElementById('progressBar').style.width = percentualPago + '%';
+            document.getElementById('percentualPago').textContent = percentualPago.toFixed(1) + '%';
+            document.getElementById('contasPagas').textContent = `${contasPagasCount}/${contasMes.length}`;
+
+            // Renderizar lista de contas do mês
+            const contasList = document.getElementById('contasList');
+            contasList.innerHTML = '';
+
+            if (contasMes.length === 0) {
+                contasList.innerHTML = '<p style="text-align: center; color: #666;">Nenhuma conta cadastrada para este mês.</p>';
+            } else {
+                contasMes
+                    .sort((a, b) => new Date(a.dataVencimento) - new Date(b.dataVencimento))
+                    .forEach(conta => {
+                        let statusClass = '';
+                        
+                        if (contaCompletamentePaga(conta)) {
+                            statusClass = '';
+                        } else if (contaParcialmentePaga(conta)) {
+                            statusClass = 'parcial';
+                        } else {
+                            const hoje = new Date();
+                            hoje.setHours(0, 0, 0, 0);
+                            const vencimento = new Date(conta.dataVencimento + 'T00:00:00');
+                            if (vencimento < hoje) {
+                                statusClass = 'atrasada';
+                            } else {
+                                statusClass = 'pendente';
+                            }
+                        }
+                        
+                        const contaElement = document.createElement('div');
+                        contaElement.className = `conta-item ${statusClass}`;
+                        contaElement.innerHTML = `
+                            <div class="conta-info">
+                                <div class="conta-descricao">${conta.descricao}</div>
+                                <div class="conta-data">📅 Vencimento: ${formatarData(conta.dataVencimento)}</div>
+                                <div class="conta-valor">${formatarMoeda(conta.valor)}</div>
+                                ${contaCompletamentePaga(conta) ? 
+                                    `<div style="color: #25d366; font-size: 12px;">✅ Pago: ${formatarMoeda(conta.valorPago)}</div>` : 
+                                    contaParcialmentePaga(conta) ?
+                                    `<div style="color: #ff9800; font-size: 12px;">⚠️ Pago parcial: ${formatarMoeda(conta.valorPago)} de ${formatarMoeda(conta.valor)}</div>
+                                     <div style="color: #dc3545; font-size: 12px;">Restante: ${formatarMoeda(conta.valor - conta.valorPago)}</div>` :
+                                    `<div style="color: #dc3545; font-size: 12px;">${statusClass === 'atrasada' ? '🔴 Atrasada' : '🟡 Pendente'}</div>`
+                                }
+                            </div>
+                            <div class="conta-acoes">
+                                ${!contaCompletamentePaga(conta) ? 
+                                    `<button class="btn-pequeno btn-pagar" onclick="pagarContaCompleta(${conta.id})" ${!isAdmin ? 'disabled' : ''}>Pagar Total</button>
+                                     <button class="btn-pequeno btn-parcial" onclick="pagarContaParcial(${conta.id})" ${!isAdmin ? 'disabled' : ''}>Pagar Parcial</button>` : 
+                                    ''
+                                }
+                                <button class="btn-pequeno btn-excluir" onclick="excluirConta(${conta.id})" ${!isAdmin ? 'disabled' : ''}>🗑️</button>
+                            </div>
+                        `;
+                        contasList.appendChild(contaElement);
+                    });
+            }
+
+            // Renderizar seção de contas em aberto
+            const contasAbertasSection = document.getElementById('contasAbertasSection');
+            const contasAbertasLista = document.getElementById('contasAbertasLista');
+            const totalAbertoGeralElement = document.getElementById('totalAbertoGeral');
+
+            totalAbertoGeralElement.textContent = formatarMoeda(totalAbertoGeral);
+
+            if (contasAbertasAnteriores.length === 0) {
+                contasAbertasSection.style.display = 'none';
+            } else {
+                contasAbertasSection.style.display = 'block';
+                contasAbertasLista.innerHTML = '';
+
+                contasAbertasAnteriores
+                    .sort((a, b) => new Date(a.dataVencimento) - new Date(b.dataVencimento))
+                    .forEach(conta => {
+                        const dataVencimento = new Date(conta.dataVencimento + 'T00:00:00');
+                        const mesVencimento = dataVencimento.getMonth();
+                        const anoVencimento = dataVencimento.getFullYear();
+                        const dias = diasAtraso(conta.dataVencimento);
+                        const valorRestante = conta.valor - conta.valorPago;
+                        
+                        let classeItem = 'conta-aberta-item';
+                        if (contaParcialmentePaga(conta)) {
+                            classeItem += ' parcial';
+                        }
+                        
+                        const contaAbertaElement = document.createElement('div');
+                        contaAbertaElement.className = classeItem;
+                        contaAbertaElement.innerHTML = `
+                            <div class="conta-aberta-info">
+                                <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 5px;">
+                                    <span class="conta-aberta-mes">
+                                        ${getNomeMes(mesVencimento)}/${anoVencimento}
+                                    </span>
+                                    ${dias > 0 ? `<span class="badge-atraso">${dias} dias atrasada</span>` : ''}
+                                    ${contaParcialmentePaga(conta) ? `<span class="badge-parcial">Pagamento parcial</span>` : ''}
+                                </div>
+                                <div style="font-weight: bold; color: #333;">${conta.descricao}</div>
+                                <div style="font-size: 12px; color: #666; margin-top: 3px;">
+                                    📅 Venceu em: ${formatarData(conta.dataVencimento)}
+                                </div>
+                                ${contaParcialmentePaga(conta) ? 
+                                    `<div class="detalhes-pagamento">
+                                        💰 Já pago: ${formatarMoeda(conta.valorPago)} | 
+                                        ❌ Restante: ${formatarMoeda(valorRestante)}
+                                    </div>` : ''
+                                }
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                <div style="font-weight: bold; color: #dc3545; font-size: 18px;">
+                                    ${formatarMoeda(valorRestante)}
+                                </div>
+                                <div style="display: flex; gap: 5px;">
+                                    <button class="btn-pequeno btn-pagar" onclick="pagarContaCompleta(${conta.id})" ${!isAdmin ? 'disabled' : ''}>
+                                        💰 Pagar Total
+                                    </button>
+                                    <button class="btn-pequeno btn-parcial" onclick="pagarContaParcial(${conta.id})" ${!isAdmin ? 'disabled' : ''}>
+                                        💵 Parcial
+                                    </button>
+                                    <button class="btn-pequeno btn-excluir" onclick="excluirConta(${conta.id})" ${!isAdmin ? 'disabled' : ''}>
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        contasAbertasLista.appendChild(contaAbertaElement);
+                    });
+            }
+        }
+
+        // Função para adicionar nova conta
+        document.getElementById('contaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!isAdmin) {
+                alert('❌ Acesso negado! Apenas o administrador pode adicionar contas.');
+                return;
+            }
+            
+            const descricao = document.getElementById('descricao').value;
+            const dataVencimento = document.getElementById('dataVencimento').value;
+            const valor = parseFloat(document.getElementById('valor').value);
+            
+            if (!descricao || !dataVencimento || !valor) {
+                alert('Por favor, preencha todos os campos!');
+                return;
+            }
+            
+            const novaConta = {
+                id: Date.now(),
+                descricao: descricao,
+                dataVencimento: dataVencimento,
+                valor: valor,
+                pago: false,
+                valorPago: 0,
+                pagamentoParcial: false
+            };
+            
+            contas.push(novaConta);
+            if (salvarContas()) {
+                // Limpar formulário
+                document.getElementById('descricao').value = '';
+                document.getElementById('dataVencimento').value = '';
+                document.getElementById('valor').value = '';
+                
+                atualizarInterface();
+                alert('✅ Conta adicionada com sucesso!');
+            }
+        });
+
+        // Função para pagar conta completamente
+        function pagarContaCompleta(id) {
+            if (!isAdmin) {
+                alert('❌ Acesso negado! Apenas o administrador pode registrar pagamentos.');
+                return;
+            }
+            
+            const conta = contas.find(c => c.id === id);
+            if (conta) {
+                const valorRestante = conta.valor - conta.valorPago;
+                if (confirm(`Pagar valor total restante de ${formatarMoeda(valorRestante)} para "${conta.descricao}"?`)) {
+                    conta.pago = true;
+                    conta.valorPago = conta.valor;
+                    conta.pagamentoParcial = false;
+                    if (salvarContas()) {
+                        atualizarInterface();
+                        alert(`✅ Conta "${conta.descricao}" paga completamente!`);
+                    }
+                }
+            }
+        }
+
+        // Função para pagamento parcial
+        function pagarContaParcial(id) {
+            if (!isAdmin) {
+                alert('❌ Acesso negado! Apenas o administrador pode registrar pagamentos.');
+                return;
+            }
+            
+            const conta = contas.find(c => c.id === id);
+            if (conta) {
+                const valorRestante = conta.valor - conta.valorPago;
+                const valorPago = prompt(`Valor a pagar para "${conta.descricao}" (Restante: ${formatarMoeda(valorRestante)}):`, valorRestante);
+                
+                if (valorPago !== null && !isNaN(valorPago) && parseFloat(valorPago) > 0) {
+                    const valorPagoNum = parseFloat(valorPago);
+                    
+                    if (valorPagoNum > valorRestante) {
+                        alert('O valor pago não pode ser maior que o valor restante!');
+                        return;
+                    }
+                    
+                    conta.valorPago += valorPagoNum;
+                    conta.pagamentoParcial = true;
+                    
+                    if (conta.valorPago >= conta.valor) {
+                        conta.pago = true;
+                        conta.valorPago = conta.valor;
+                        conta.pagamentoParcial = false;
+                    }
+                    
+                    if (salvarContas()) {
+                        atualizarInterface();
+                        
+                        if (conta.pago) {
+                            alert(`✅ Conta "${conta.descricao}" completamente paga!`);
+                        } else {
+                            alert(`💵 Pagamento parcial de ${formatarMoeda(valorPagoNum)} registrado para "${conta.descricao}"`);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Função para excluir conta
+        function excluirConta(id) {
+            if (!isAdmin) {
+                alert('❌ Acesso negado! Apenas o administrador pode excluir contas.');
+                return;
+            }
+            
+            const conta = contas.find(c => c.id === id);
+            if (conta && confirm(`Tem certeza que deseja excluir a conta "${conta.descricao}"?`)) {
+                contas = contas.filter(c => c.id !== id);
+                if (salvarContas()) {
+                    atualizarInterface();
+                    alert('🗑️ Conta excluída com sucesso!');
+                }
+            }
+        }
+
+        // Event listeners para filtros
+        document.getElementById('mesFiltro').addEventListener('change', atualizarInterface);
+        document.getElementById('anoFiltro').addEventListener('change', atualizarInterface);
+
+        // Permitir login com Enter
+        document.getElementById('senhaInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verificarSenha();
+            }
+        });
+
+        // Inicializar interface
+        atualizarModoEdicao();
+        atualizarInterface();
+
+        // Adicionar funções ao escopo global
+        window.verificarSenha = verificarSenha;
+        window.entrarComoVisualizador = entrarComoVisualizador;
+        window.mostrarLogin = mostrarLogin;
+        window.fazerLogout = fazerLogout;
+        window.pagarContaCompleta = pagarContaCompleta;
+        window.pagarContaParcial = pagarContaParcial;
+        window.excluirConta = excluirConta;
+    </script>
+</body>
+</html>
