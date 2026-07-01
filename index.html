@@ -263,6 +263,11 @@
             background: #fff8e1;
         }
 
+        .conta-item.com-juros {
+            border-left-color: #e91e63;
+            background: #fce4ec;
+        }
+
         .conta-info {
             flex: 1;
         }
@@ -357,6 +362,57 @@
             margin-bottom: 20px;
         }
 
+        /* Grupo de juros */
+        .juros-group {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-size: 14px;
+            color: #856404;
+            font-weight: bold;
+        }
+
+        .juros-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .juros-input-group input {
+            width: 80px;
+            text-align: center;
+        }
+
+        .juros-input-group span {
+            color: #856404;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .juros-info {
+            font-size: 12px;
+            color: #856404;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
         /* SEÇÃO: Contas em Aberto */
         .contas-abertas {
             background: #fff3f3;
@@ -427,6 +483,11 @@
             background: #fff8e1;
         }
 
+        .conta-aberta-item.com-juros {
+            border-left-color: #e91e63;
+            background: #fce4ec;
+        }
+
         .conta-aberta-item:hover {
             transform: translateX(5px);
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -464,6 +525,15 @@
             margin-left: 5px;
         }
 
+        .badge-juros {
+            background: #e91e63;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+
         .sem-contas {
             text-align: center;
             color: #666;
@@ -475,6 +545,13 @@
             font-size: 12px;
             color: #666;
             margin-top: 5px;
+        }
+
+        .juros-calculo {
+            font-size: 12px;
+            color: #e91e63;
+            margin-top: 5px;
+            font-weight: bold;
         }
 
         .aviso-visualizacao {
@@ -570,6 +647,23 @@
                 <label>Valor Total (R$)</label>
                 <input type="number" id="valor" step="0.01" min="0.01" placeholder="0,00" required disabled>
             </div>
+            
+            <!-- Grupo de Juros Personalizado -->
+            <div class="juros-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="aplicaJuros" disabled>
+                    <label for="aplicaJuros">📈 Aplicar juros por atraso</label>
+                </div>
+                <div class="juros-input-group" id="jurosInputGroup" style="display: none;">
+                    <label style="margin: 0; font-size: 14px;">Taxa de juros:</label>
+                    <input type="number" id="taxaJuros" value="5" step="0.1" min="0.1" max="100" disabled>
+                    <span>% ao mês</span>
+                </div>
+                <div class="juros-info">
+                    💡 Os juros são calculados diariamente de forma proporcional
+                </div>
+            </div>
+            
             <button type="submit" class="btn" id="btnAdicionar" disabled>➕ Adicionar Conta</button>
         </form>
 
@@ -622,16 +716,20 @@
                 valor: 1500.00,
                 pago: false,
                 valorPago: 500.00,
-                pagamentoParcial: true
+                pagamentoParcial: true,
+                aplicaJuros: false,
+                taxaJuros: 5
             },
             {
                 id: 2,
-                descricao: 'Conta de Luz - Março',
-                dataVencimento: '2024-03-15',
-                valor: 200.00,
+                descricao: 'Empréstimo',
+                dataVencimento: '2024-06-20',
+                valor: 2000.00,
                 pago: false,
                 valorPago: 0,
-                pagamentoParcial: false
+                pagamentoParcial: false,
+                aplicaJuros: true,
+                taxaJuros: 5
             },
             {
                 id: 3,
@@ -640,7 +738,9 @@
                 valor: 100.00,
                 pago: false,
                 valorPago: 0,
-                pagamentoParcial: false
+                pagamentoParcial: false,
+                aplicaJuros: false,
+                taxaJuros: 5
             },
             {
                 id: 4,
@@ -649,7 +749,9 @@
                 valor: 800.00,
                 pago: false,
                 valorPago: 0,
-                pagamentoParcial: false
+                pagamentoParcial: false,
+                aplicaJuros: false,
+                taxaJuros: 5
             }
         ];
 
@@ -657,6 +759,48 @@
         const hoje = new Date();
         document.getElementById('mesFiltro').value = hoje.getMonth();
         document.getElementById('anoFiltro').value = hoje.getFullYear();
+
+        // Evento para mostrar/esconder campo de taxa de juros
+        document.getElementById('aplicaJuros').addEventListener('change', function() {
+            const jurosInputGroup = document.getElementById('jurosInputGroup');
+            const taxaJurosInput = document.getElementById('taxaJuros');
+            
+            if (this.checked) {
+                jurosInputGroup.style.display = 'flex';
+                taxaJurosInput.disabled = !isAdmin;
+            } else {
+                jurosInputGroup.style.display = 'none';
+                taxaJurosInput.disabled = true;
+            }
+        });
+
+        // Função para calcular juros
+        function calcularJuros(conta) {
+            if (!conta.aplicaJuros || conta.pago) return 0;
+            
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            const vencimento = new Date(conta.dataVencimento + 'T00:00:00');
+            
+            if (hoje <= vencimento) return 0;
+            
+            const diffTime = Math.abs(hoje - vencimento);
+            const diasAtraso = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            const taxaMensal = conta.taxaJuros || 5; // Usa a taxa personalizada ou 5% como padrão
+            const taxaDiaria = taxaMensal / 30;
+            
+            const valorBase = conta.valor - conta.valorPago;
+            const juros = valorBase * (taxaDiaria / 100) * diasAtraso;
+            
+            return juros;
+        }
+
+        // Função para calcular valor total com juros
+        function calcularValorTotalComJuros(conta) {
+            const juros = calcularJuros(conta);
+            return (conta.valor - conta.valorPago) + juros;
+        }
 
         // Função para verificar senha
         function verificarSenha() {
@@ -708,7 +852,10 @@
             const descricao = document.getElementById('descricao');
             const dataVencimento = document.getElementById('dataVencimento');
             const valor = document.getElementById('valor');
+            const aplicaJuros = document.getElementById('aplicaJuros');
+            const taxaJuros = document.getElementById('taxaJuros');
             const btnAdicionar = document.getElementById('btnAdicionar');
+            const jurosInputGroup = document.getElementById('jurosInputGroup');
             
             if (isAdmin) {
                 statusModo.innerHTML = '<span class="modo-edicao">✏️ Modo Administrador</span>';
@@ -720,7 +867,14 @@
                 descricao.disabled = false;
                 dataVencimento.disabled = false;
                 valor.disabled = false;
+                aplicaJuros.disabled = false;
+                taxaJuros.disabled = false;
                 btnAdicionar.disabled = false;
+                
+                // Mostrar campo de juros se checkbox estiver marcado
+                if (aplicaJuros.checked) {
+                    jurosInputGroup.style.display = 'flex';
+                }
             } else {
                 statusModo.innerHTML = '<span class="modo-visualizacao">👁️ Modo Visualização</span>';
                 btnLogin.style.display = 'inline-block';
@@ -731,7 +885,10 @@
                 descricao.disabled = true;
                 dataVencimento.disabled = true;
                 valor.disabled = true;
+                aplicaJuros.disabled = true;
+                taxaJuros.disabled = true;
                 btnAdicionar.disabled = true;
+                jurosInputGroup.style.display = 'none';
             }
             
             // Recarregar interface para atualizar botões
@@ -815,8 +972,12 @@
                 return false;
             });
 
-            // Calcular totais do mês
-            const totalMes = contasMes.reduce((acc, conta) => acc + conta.valor, 0);
+            // Calcular totais do mês (incluindo juros)
+            const totalMes = contasMes.reduce((acc, conta) => {
+                if (contaCompletamentePaga(conta)) return acc + conta.valor;
+                return acc + calcularValorTotalComJuros(conta);
+            }, 0);
+            
             const totalPagoMes = contasMes
                 .filter(conta => contaCompletamentePaga(conta))
                 .reduce((acc, conta) => acc + conta.valorPago, 0);
@@ -824,9 +985,9 @@
             const contasPagasCount = contasMes.filter(conta => contaCompletamentePaga(conta)).length;
             const percentualPago = totalMes > 0 ? (totalPagoMes / totalMes) * 100 : 0;
 
-            // Calcular total de contas em aberto
+            // Calcular total de contas em aberto (incluindo juros)
             const totalAbertoGeral = contasAbertasAnteriores.reduce((acc, conta) => {
-                return acc + (conta.valor - conta.valorPago);
+                return acc + calcularValorTotalComJuros(conta);
             }, 0);
 
             // Atualizar cards de saldo
@@ -850,9 +1011,13 @@
                     .sort((a, b) => new Date(a.dataVencimento) - new Date(b.dataVencimento))
                     .forEach(conta => {
                         let statusClass = '';
+                        let temJuros = false;
                         
                         if (contaCompletamentePaga(conta)) {
                             statusClass = '';
+                        } else if (conta.aplicaJuros && diasAtraso(conta.dataVencimento) > 0) {
+                            statusClass = 'com-juros';
+                            temJuros = true;
                         } else if (contaParcialmentePaga(conta)) {
                             statusClass = 'parcial';
                         } else {
@@ -866,14 +1031,26 @@
                             }
                         }
                         
+                        const juros = calcularJuros(conta);
+                        const valorTotal = calcularValorTotalComJuros(conta);
+                        const taxaJuros = conta.taxaJuros || 5;
+                        
                         const contaElement = document.createElement('div');
                         contaElement.className = `conta-item ${statusClass}`;
                         contaElement.innerHTML = `
                             <div class="conta-info">
-                                <div class="conta-descricao">${conta.descricao}</div>
+                                <div class="conta-descricao">
+                                    ${conta.descricao}
+                                    ${conta.aplicaJuros ? ` 📈` : ''}
+                                </div>
                                 <div class="conta-data">📅 Vencimento: ${formatarData(conta.dataVencimento)}</div>
                                 <div class="conta-valor">${formatarMoeda(conta.valor)}</div>
-                                ${contaCompletamentePaga(conta) ? 
+                                ${temJuros ? 
+                                    `<div class="juros-calculo">
+                                        📈 Juros (${taxaJuros}% a.m.): +${formatarMoeda(juros)}
+                                        <br>💰 Total com juros: ${formatarMoeda(valorTotal)}
+                                    </div>` : 
+                                    contaCompletamentePaga(conta) ? 
                                     `<div style="color: #25d366; font-size: 12px;">✅ Pago: ${formatarMoeda(conta.valorPago)}</div>` : 
                                     contaParcialmentePaga(conta) ?
                                     `<div style="color: #ff9800; font-size: 12px;">⚠️ Pago parcial: ${formatarMoeda(conta.valorPago)} de ${formatarMoeda(conta.valor)}</div>
@@ -914,11 +1091,25 @@
                         const mesVencimento = dataVencimento.getMonth();
                         const anoVencimento = dataVencimento.getFullYear();
                         const dias = diasAtraso(conta.dataVencimento);
-                        const valorRestante = conta.valor - conta.valorPago;
+                        const juros = calcularJuros(conta);
+                        const valorTotal = calcularValorTotalComJuros(conta);
+                        const taxaJuros = conta.taxaJuros || 5;
                         
                         let classeItem = 'conta-aberta-item';
+                        let badges = '';
+                        
+                        if (conta.aplicaJuros && dias > 0) {
+                            classeItem += ' com-juros';
+                            badges += `<span class="badge-juros">📈 ${taxaJuros}% a.m.</span>`;
+                        }
+                        
                         if (contaParcialmentePaga(conta)) {
                             classeItem += ' parcial';
+                            badges += `<span class="badge-parcial">Pagamento parcial</span>`;
+                        }
+                        
+                        if (dias > 0) {
+                            badges += `<span class="badge-atraso">${dias} dias atrasada</span>`;
                         }
                         
                         const contaAbertaElement = document.createElement('div');
@@ -929,24 +1120,36 @@
                                     <span class="conta-aberta-mes">
                                         ${getNomeMes(mesVencimento)}/${anoVencimento}
                                     </span>
-                                    ${dias > 0 ? `<span class="badge-atraso">${dias} dias atrasada</span>` : ''}
-                                    ${contaParcialmentePaga(conta) ? `<span class="badge-parcial">Pagamento parcial</span>` : ''}
+                                    ${badges}
                                 </div>
-                                <div style="font-weight: bold; color: #333;">${conta.descricao}</div>
+                                <div style="font-weight: bold; color: #333;">
+                                    ${conta.descricao}
+                                    ${conta.aplicaJuros ? ' 📈' : ''}
+                                </div>
                                 <div style="font-size: 12px; color: #666; margin-top: 3px;">
                                     📅 Venceu em: ${formatarData(conta.dataVencimento)}
                                 </div>
+                                ${conta.aplicaJuros && dias > 0 ? 
+                                    `<div class="juros-calculo">
+                                        📈 Juros (${taxaJuros}% a.m.): +${formatarMoeda(juros)}
+                                        <br>Taxa diária: ${(taxaJuros/30).toFixed(2)}% ao dia
+                                    </div>` : ''
+                                }
                                 ${contaParcialmentePaga(conta) ? 
                                     `<div class="detalhes-pagamento">
-                                        💰 Já pago: ${formatarMoeda(conta.valorPago)} | 
-                                        ❌ Restante: ${formatarMoeda(valorRestante)}
+                                        💰 Já pago: ${formatarMoeda(conta.valorPago)}
                                     </div>` : ''
                                 }
                             </div>
                             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                                 <div style="font-weight: bold; color: #dc3545; font-size: 18px;">
-                                    ${formatarMoeda(valorRestante)}
+                                    ${formatarMoeda(valorTotal)}
                                 </div>
+                                ${conta.aplicaJuros && dias > 0 ? 
+                                    `<div style="font-size: 11px; color: #e91e63;">
+                                        Original: ${formatarMoeda(conta.valor - conta.valorPago)}
+                                    </div>` : ''
+                                }
                                 <div style="display: flex; gap: 5px;">
                                     <button class="btn-pequeno btn-pagar" onclick="pagarContaCompleta(${conta.id})" ${!isAdmin ? 'disabled' : ''}>
                                         💰 Pagar Total
@@ -977,9 +1180,16 @@
             const descricao = document.getElementById('descricao').value;
             const dataVencimento = document.getElementById('dataVencimento').value;
             const valor = parseFloat(document.getElementById('valor').value);
+            const aplicaJuros = document.getElementById('aplicaJuros').checked;
+            const taxaJuros = aplicaJuros ? parseFloat(document.getElementById('taxaJuros').value) : 5;
             
             if (!descricao || !dataVencimento || !valor) {
                 alert('Por favor, preencha todos os campos!');
+                return;
+            }
+            
+            if (aplicaJuros && (!taxaJuros || taxaJuros <= 0)) {
+                alert('Por favor, defina uma taxa de juros válida!');
                 return;
             }
             
@@ -990,7 +1200,9 @@
                 valor: valor,
                 pago: false,
                 valorPago: 0,
-                pagamentoParcial: false
+                pagamentoParcial: false,
+                aplicaJuros: aplicaJuros,
+                taxaJuros: taxaJuros
             };
             
             contas.push(novaConta);
@@ -999,13 +1211,21 @@
                 document.getElementById('descricao').value = '';
                 document.getElementById('dataVencimento').value = '';
                 document.getElementById('valor').value = '';
+                document.getElementById('aplicaJuros').checked = false;
+                document.getElementById('taxaJuros').value = '5';
+                document.getElementById('jurosInputGroup').style.display = 'none';
                 
                 atualizarInterface();
-                alert('✅ Conta adicionada com sucesso!');
+                
+                if (aplicaJuros) {
+                    alert(`✅ Conta adicionada com juros de ${taxaJuros}% ao mês!`);
+                } else {
+                    alert('✅ Conta adicionada com sucesso!');
+                }
             }
         });
 
-        // Função para pagar conta completamente
+        // Função para pagar conta completamente (incluindo juros)
         function pagarContaCompleta(id) {
             if (!isAdmin) {
                 alert('❌ Acesso negado! Apenas o administrador pode registrar pagamentos.');
@@ -1014,10 +1234,19 @@
             
             const conta = contas.find(c => c.id === id);
             if (conta) {
-                const valorRestante = conta.valor - conta.valorPago;
-                if (confirm(`Pagar valor total restante de ${formatarMoeda(valorRestante)} para "${conta.descricao}"?`)) {
+                const valorTotal = calcularValorTotalComJuros(conta);
+                const juros = calcularJuros(conta);
+                const taxaJuros = conta.taxaJuros || 5;
+                
+                let mensagem = `Pagar valor total de ${formatarMoeda(valorTotal)} para "${conta.descricao}"?`;
+                if (juros > 0) {
+                    mensagem += `\n\nValor original: ${formatarMoeda(conta.valor - conta.valorPago)}`;
+                    mensagem += `\nJuros (${taxaJuros}% a.m.): ${formatarMoeda(juros)}`;
+                }
+                
+                if (confirm(mensagem)) {
                     conta.pago = true;
-                    conta.valorPago = conta.valor;
+                    conta.valorPago = valorTotal;
                     conta.pagamentoParcial = false;
                     if (salvarContas()) {
                         atualizarInterface();
@@ -1036,23 +1265,33 @@
             
             const conta = contas.find(c => c.id === id);
             if (conta) {
-                const valorRestante = conta.valor - conta.valorPago;
-                const valorPago = prompt(`Valor a pagar para "${conta.descricao}" (Restante: ${formatarMoeda(valorRestante)}):`, valorRestante);
+                const valorTotal = calcularValorTotalComJuros(conta);
+                const juros = calcularJuros(conta);
+                const taxaJuros = conta.taxaJuros || 5;
+                
+                let mensagem = `Valor a pagar para "${conta.descricao}"`;
+                if (juros > 0) {
+                    mensagem += `\nTotal com juros (${taxaJuros}% a.m.): ${formatarMoeda(valorTotal)}`;
+                    mensagem += `\nJuros acumulados: ${formatarMoeda(juros)}`;
+                }
+                mensagem += `\n\nValor do pagamento:`;
+                
+                const valorPago = prompt(mensagem, valorTotal);
                 
                 if (valorPago !== null && !isNaN(valorPago) && parseFloat(valorPago) > 0) {
                     const valorPagoNum = parseFloat(valorPago);
                     
-                    if (valorPagoNum > valorRestante) {
-                        alert('O valor pago não pode ser maior que o valor restante!');
+                    if (valorPagoNum > valorTotal) {
+                        alert('O valor pago não pode ser maior que o valor total (incluindo juros)!');
                         return;
                     }
                     
                     conta.valorPago += valorPagoNum;
                     conta.pagamentoParcial = true;
                     
-                    if (conta.valorPago >= conta.valor) {
+                    if (conta.valorPago >= valorTotal) {
                         conta.pago = true;
-                        conta.valorPago = conta.valor;
+                        conta.valorPago = valorTotal;
                         conta.pagamentoParcial = false;
                     }
                     
